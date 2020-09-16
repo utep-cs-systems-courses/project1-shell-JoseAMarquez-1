@@ -35,6 +35,8 @@ while running_state:
     userInput = input()
     userInputList = userInput.split(" ")
 
+
+
     #if exit change running state to 0 (while loop terminated)
     if userInputList[0] == 'exit' :
         os.write(1, ("Exiting Shell...").encode())
@@ -56,9 +58,7 @@ while running_state:
             pass
         continue
 
-
-
-    elif userInputList[1] == '>':
+    elif '>' in userInputList:
         if len(userInputList) > 2:
             os.write(1, ("The System cannot find the path specidied ").encode())
             pass
@@ -87,9 +87,38 @@ while running_state:
                 os.write(1, ("Parent: Child %d terminated with exit code %d\n" %
                  childPidCode).encode())
 
+    elif '<' in userInputList:
+        if len(userInputList) > 3:
+            os.write(1, ("The System cannot find the path specidied ").encode())
+            pass
+        else:
+            pid = os.getpid()
+            rc = os.fork()
 
-    elif userInputList[1] == '|':
-        if len(userInputList) > 2:
+            if rc < 0:
+                os.write(2, ("fork failed, returning %d\n" % rc).encode())
+                sys.exit(1)
+            elif rc == 0:
+                args = [userInputList[2] ,userInputList[0]]
+                os.close(1) # output stdout
+                os.open(args[args.index('>') +1], os,O_CREAT | os.O_WRONLY)
+                os.set_inheritable(1,True)
+
+                for dir in re.split(":", os.environ['PATH']):
+                    program = "%s/%s" % (dir, args[0])
+                    try:
+                        os.execve(program,args, os.environ)
+                    except FileNotFoundError:
+                        pass
+                sys.exit(1)
+            else:
+                childPidCode = os.wait()
+                os.write(1, ("Parent: Child %d terminated with exit code %d\n" %
+                 childPidCode).encode())
+
+
+    elif '|' in userInputList:
+        if len(userInputList) > 3:
             os.write(1, ("The System cannot find the path specidied ").encode())
             pass
         else:
