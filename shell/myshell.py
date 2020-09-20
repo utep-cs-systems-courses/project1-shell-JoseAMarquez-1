@@ -13,11 +13,13 @@ def main():
 
         if userInputList[0] == "exit":
             state = False
-        elif "cd " in userInput:
+        elif "cd" in userInputList:
             shell_cd(userInput)
-        elif ">" or "<" in userInput:
+        elif '>' in userInputList:
             shell_fork(userInput)
-        elif "|" in userInput:
+        elif '<' in userInputList:
+            shell_fork(userInput)
+        elif '|' in userInputList:
             shell_pipie(userInput)
         else:
             shell_command(userInput)
