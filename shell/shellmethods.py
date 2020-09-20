@@ -1,4 +1,4 @@
-import os, sys, time, re, subprocess
+import os, sys, time, re
 
 def shell_cd(userInput):
     userInputList = userInput.split(" ")
@@ -12,9 +12,11 @@ def shell_cd(userInput):
 
 
 def shell_pipie(userInput):
+    os.write(1, "pipe".encode())
     pass
 
 def shell_fork(userInput):
+    os.write(1, "fork".encode())
     if '>' in userInput:
         pass
     elif "<" in userInput:
@@ -26,16 +28,16 @@ def shell_command(userInput):
 
     if rc < 0:
         sys.exit(1)
-    elif r == 0:
+    elif rc == 0:
         userInputList = userInput.split(" ")
-        args = [userInputList[0],userInputList[1]]
+        args = userInputList
 
         for dir in re.split(":", os.environ['PATH']):
             program = "%s/%s" % (dir, args[0])
-        try:
-            os.execve(program, args, os.environ)
-        except FileNotFoundError:
-            pass
+            try:
+                os.execve(program, args, os.environ)
+            except FileNotFoundError:
+                pass
 
         os.write(2, ("Could not exec %s\n" % args[0]).encode())
         sys.exit(1)
