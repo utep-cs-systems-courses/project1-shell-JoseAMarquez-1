@@ -1,3 +1,4 @@
+#! /usr/bin/env python3
 import os, sys, time, re
 from shellmethods import *
 
@@ -13,6 +14,8 @@ def main():
 
         if userInputList[0] == "exit":
             state = False
+        elif not userInput:
+            pass
         elif "cd" in userInputList:
             shell_cd(userInput)
         elif '>' in userInputList:
