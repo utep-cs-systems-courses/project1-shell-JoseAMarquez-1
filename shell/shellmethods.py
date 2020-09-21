@@ -1,5 +1,5 @@
 #! /usr/bin/env python3
-import os, sys, time, re
+import os, sys, re
 
 def shell_cd(userInput):
     userInputList = userInput.split(" ")
@@ -42,58 +42,48 @@ def shell_pipie(userInput):
         newProcess(userInputList[2])
 
 def shell_fork(userInput):
-    os.write(1, "fork".encode())
-    if '>' in userInput:
-        pid = os.getpid()
-        rc = os.fork()
+    pid = os.getpid()
+    rc = os.fork()
+    userInputList = userInput.split(" ")
+    args = userInputList
 
-        if rc < 0:
-            os.write(2, ("fork failed, returning %d\n" % rc).encode())
-            sys.exit(1)
-        elif rc == 0:
-            userInputList = userInput.split(" ")
-            args = userInputList
-            os.close(1)
-            os.open(args[2], os.O_CREAT | os.WRONLY);
-            os.set_inheritable(1,True)
+    if rc < 0:
+        sys.exit(1)
+    elif rc == 0:
+        if(">" in args):
+            try:
+                x = args.index(">")
+                os.close(0)
+                os.open(args[x+1], os.O_CREAT | os.O_WRONLY);
+                os.set_inheritable(1, True)
+                args.remove(args[x+1])
+                args.remove(">")
 
-            for dir in re.split(":", os.environ['PATH']):
-                program = "%s/%s" % (dir, args[0])
-                try:
-                    os.execve(program,args, os.environ)
-                except FileNotFoundError:
-                    pass
-            sys.exit(1)
-        else:
-            childPidCode = os.wait()
-            os.write(1, ("Parent: Child %d terminated with exit code %d\n" %
-             childPidCode).encode())
+            except FileNotFoundError:
+                pass
 
-    elif "<" in userInput:
-        pid = os.getpid()
-        rc = os.fork()
+        if("<" in args):
+            try:
+                x = args.index('<')
+                os.close(0)
+                os.open(args[leng(args)+1], os.O_RDONLY);
+                os.set_inheritable(0, True)
+                args.remove(args[x+1])
+                args.remove("<")
 
-        if rc < 0:
-            os.write(2, ("fork failed, returning %d\n" % rc).encode())
-            sys.exit(1)
-        elif rc == 0:
-            userInputList = userInput.split(" ")
-            args = userInputList
-            os.close(1) # output stdout
-            os.open(args[args.index('>') +1], os,O_CREAT | os.O_WRONLY)
-            os.set_inheritable(1,True)
+            except FileNotFoundError:
+                pass
 
-            for dir in re.split(":", os.environ['PATH']):
-                program = "%s/%s" % (dir, args[0])
-                try:
-                    os.execve(program,args, os.environ)
-                except FileNotFoundError:
-                    pass
-            sys.exit(1)
-        else:
-            childPidCode = os.wait()
-            os.write(1, ("Parent: Child %d terminated with exit code %d\n" %
-             childPidCode).encode())
+    for dir in re.split(":", os.environ['PATH']):
+        program = "%s/%s" % (dir, args[0])
+        try:
+            os.execve(program, args, os.environ)
+        except FileNotFoundError:
+            pass
+
+    os.write(1, ("%s: command not found\n").encode())
+    sys.exit(1)
+
 
 def shell_command(userInput):
     pid = os.getpid()
